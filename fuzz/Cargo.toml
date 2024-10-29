@@ -23,5 +23,11 @@ path = "fuzz_targets/streaming.rs"
 test = false
 doc = false
 
+[[bin]]
+name = "process"
+path = "fuzz_targets/process.rs"
+test = false
+doc = false
+
 # Work around https://github.com/rust-lang/cargo/issues/8338
 [workspace]

@@ -15,65 +15,63 @@ use unicode_normalization::{
     UnicodeNormalization,
 };
 
-fuzz_target!(|data: &[u8]| {
-    let mut data = data;
-    let c = if let Some((char_value, remaining_data)) = data.split_first() {
-        match std::char::from_u32(*char_value as u32) {
-            Some(ch) => {
-                data = remaining_data;
-                ch
-            }
-            None => return,
-        }
-    } else {
-        return;
-    };
+fuzz_target!(|data: (u8, String)| {
+    let (function_index, string_data) = data;
 
-    // Generate second character for fuzzing if data is enough
-    let c2 = if let Some((char_value, remaining_data)) = data.split_first() {
-        data = remaining_data;
-        std::char::from_u32(*char_value as u32)
-    } else {
-        None
-    };
-    let string_data: String = data
-        .iter()
-        .filter_map(|&b| std::char::from_u32(b as u32))
-        .collect();
+    // Create an iterator for characters
+    let mut chars = string_data.chars();
 
-    // Randomly choose a function target
-    match data.first().map(|&b| b % 10) {
-        Some(0) => {
-            if let Some(c2) = c2 {
-                let _ = compose(c, c2);
+    // Randomly fuzz a target function
+    match function_index % 10 {
+        0 => {
+            // Fuzz compose with two distinct characters
+            if let (Some(c1), Some(c2)) = (chars.next(), chars.next()) {
+                let _ = compose(c1, c2);
             }
         }
-        Some(1) => {
-            let _ = canonical_combining_class(c);
+        1 => {
+            // Fuzz canonical_combining_class
+            if let Some(c) = chars.next() {
+                let _ = canonical_combining_class(c);
+            }
         }
-        Some(2) => {
-            let _ = is_combining_mark(c);
+        2 => {
+            // Fuzz is_combining_mark
+            if let Some(c) = chars.next() {
+                let _ = is_combining_mark(c);
+            }
         }
-        Some(3) => {
+        3 => {
+            // Fuzz NFC
             let _ = string_data.nfc().collect::<String>();
         }
-        Some(4) => {
+        4 => {
+            // Fuzz NFKD
             let _ = string_data.nfkd().collect::<String>();
         }
-        Some(5) => {
+        5 => {
+            // Fuzz NFD
             let _ = string_data.nfd().collect::<String>();
         }
-        Some(6) => {
+        6 => {
+            // Fuzz NFKC
             let _ = string_data.nfkc().collect::<String>();
         }
-        Some(7) => {
+        7 => {
+            // Fuzz stream_safe
             let _ = string_data.stream_safe().collect::<String>();
         }
-        Some(8) => {
-            decompose_canonical(c, |_| {});
+        8 => {
+            // Fuzz decompose_canonical
+            if let Some(c) = chars.next() {
+                decompose_canonical(c, |_| {});
+            }
         }
-        Some(9) => {
-            decompose_compatible(c, |_| {});
+        9 => {
+            // Fuzz decompose_compatible
+            if let Some(c) = chars.next() {
+                decompose_compatible(c, |_| {});
+            }
         }
         _ => {}
     }

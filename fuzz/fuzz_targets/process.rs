@@ -8,7 +8,10 @@ extern crate libfuzzer_sys;
 extern crate unicode_normalization;
 
 use unicode_normalization::{
-    char::{compose, canonical_combining_class, is_combining_mark, decompose_canonical, decompose_compatible},
+    char::{
+        canonical_combining_class, compose, decompose_canonical, decompose_compatible,
+        is_combining_mark,
+    },
     UnicodeNormalization,
 };
 
@@ -33,7 +36,10 @@ fuzz_target!(|data: &[u8]| {
     } else {
         None
     };
-    let string_data: String = data.iter().filter_map(|&b| std::char::from_u32(b as u32)).collect();
+    let string_data: String = data
+        .iter()
+        .filter_map(|&b| std::char::from_u32(b as u32))
+        .collect();
 
     // Randomly choose a function target
     match data.first().map(|&b| b % 10) {
